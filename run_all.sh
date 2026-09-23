@@ -3,6 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# The WAL archive is a bind mount; the container's postgres user (uid 999) must be able to write to it.
+mkdir -p archive results && chmod 777 archive results
+
 echo "### starting primary + replica"
 (cd compose && docker compose up -d)
 until docker exec pg-primary psql -U postgres -d appdb -tAc "select count(*) from pg_stat_replication" 2>/dev/null | grep -q '^1$'; do sleep 5; done

@@ -95,6 +95,9 @@ git clone https://github.com/prhoguns/postgres-dba-toolkit.git && cd postgres-db
 ./run_all.sh          # start, seed, diagnose, tune, run both drills (~5 min)
 ```
 
+`run_all.sh` makes `archive/` and `results/` world-writable first: they are bind mounts, and the
+container's `postgres` user (uid 999) has to write the WAL archive into them.
+
 Or step by step:
 
 ```bash

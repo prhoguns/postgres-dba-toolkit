@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Make the WAL archive writable by the container's postgres user
+        run: chmod 777 archive results
       - name: Start primary and replica
         run: cd compose && docker compose up -d
       - name: Wait for replication
