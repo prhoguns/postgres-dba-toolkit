@@ -1,0 +1,24 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  drills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start primary and replica
+        run: cd compose && docker compose up -d
+      - name: Wait for replication
+        run: |
+          for i in $(seq 1 40); do
+            n=$(docker exec pg-primary psql -U postgres -d appdb -tAc "select count(*) from pg_stat_replication" 2>/dev/null || echo 0)
+            [ "$n" = "1" ] && break; sleep 5
+          done
+          docker exec pg-primary psql -U postgres -d appdb -c "select application_name, state from pg_stat_replication"
+      - name: Seed
+        run: docker exec pg-primary bash /scripts/seed.sh > /dev/null
+      - name: Diagnostics run without error
+        run: for f in 01_health 03_indexing 04_bloat_vacuum 05_locks 06_permissions 07_capacity; do docker exec pg-primary psql -v ON_ERROR_STOP=1 -U postgres -d appdb -Xf "/sql/$f.sql" > /dev/null; done
+      - name: Drill - point-in-time recovery
+        run: docker exec -u postgres pg-primary bash /tests/test_pitr.sh
+      - name: Drill - failover
+        run: bash tests/test_failover.sh

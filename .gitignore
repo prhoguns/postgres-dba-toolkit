@@ -1,0 +1,6 @@
+archive/*
+!archive/.gitkeep
+restore/*
+!restore/.gitkeep
+results/*.txt
+__pycache__/

@@ -1,0 +1,60 @@
+# Primary + streaming replica + a WAL archive volume for point-in-time recovery.
+# Ports: primary 5440, replica 5441, restored instance 5442 (started on demand by the PITR script).
+services:
+  primary:
+    image: postgres:16
+    container_name: pg-primary
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c archive_mode=on
+      -c archive_command='test ! -f /archive/%f && cp %p /archive/%f'
+      -c hot_standby=on
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c log_min_duration_statement=200
+      -c log_checkpoints=on
+      -c log_autovacuum_min_duration=0
+    ports: ["5440:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../archive:/archive
+      - ../sql:/sql:ro
+      - ../scripts:/scripts:ro
+      - ../initdb:/docker-entrypoint-initdb.d:ro
+      - ../results:/results
+      - ../tests:/tests:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  replica:
+    image: postgres:16
+    container_name: pg-replica
+    depends_on:
+      primary: { condition: service_healthy }
+    environment:
+      PGPASSWORD: postgres
+    entrypoint: ["/bin/bash", "/scripts/start_replica.sh"]
+    ports: ["5441:5432"]
+    volumes:
+      - pgreplica:/var/lib/postgresql/data
+      - ../archive:/archive
+      - ../scripts:/scripts:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  pgdata:
+  pgreplica:
