@@ -1,5 +1,9 @@
 # PostgreSQL DBA Toolkit
 
+**Start here:** [Recovery and failover drill output](#the-two-drills) · [Runbooks](runbooks/) · [Portfolio case study](https://prhoguns.github.io/case-studies/postgres-dba-toolkit.html)
+
+**What I did:** I configured a PostgreSQL primary, streaming replica and WAL archive, then wrote repeatable PITR and failover tests. In the September 2026 Docker lab, recovery passed 3/3 assertions and failover passed 4/4. These are lab results, not a production availability claim.
+
 _Status: Built and verified September 22–23, 2026. Every number below came from a real run on this lab._
 
 A working PostgreSQL environment — primary, streaming replica, WAL archive — with the day-to-day
