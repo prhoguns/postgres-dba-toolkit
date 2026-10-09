@@ -17,7 +17,7 @@ that promotes the standby. Runbooks explain the reasoning, not just the commands
          └──streaming replication (slot: replica_slot)──▶ [ pg-replica :5441, hot standby ]
 ```
 
-**Stack:** PostgreSQL 16, Docker Compose, `pg_basebackup`, `pg_stat_statements`, bash.
+**Stack:** PostgreSQL 18, Docker Compose, `pg_basebackup`, `pg_stat_statements`, bash.
 Dataset: 200,000 customers, 1,000,000 orders, 2,500,000 order items (~390 MB).
 
 ## The two drills

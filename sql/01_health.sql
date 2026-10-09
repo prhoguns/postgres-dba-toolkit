@@ -24,7 +24,12 @@ select application_name, state, sync_state,
 from pg_stat_replication;
 
 \echo === checkpoints and background writer
-select checkpoints_timed, checkpoints_req,
-       round(100.0 * checkpoints_req / nullif(checkpoints_timed + checkpoints_req, 0), 1) as pct_requested,
-       buffers_checkpoint, buffers_clean, buffers_backend
-from pg_stat_bgwriter;
+-- PostgreSQL 17 moved checkpoint counters to pg_stat_checkpointer and backend writes to pg_stat_io.
+select c.num_timed                as checkpoints_timed,
+       c.num_requested            as checkpoints_req,
+       round(100.0 * c.num_requested / nullif(c.num_timed + c.num_requested, 0), 1) as pct_requested,
+       c.buffers_written          as buffers_checkpoint,
+       b.buffers_clean,
+       (select sum(writes) from pg_stat_io where backend_type = 'client backend') as buffers_backend
+from pg_stat_checkpointer c
+cross join pg_stat_bgwriter b;
